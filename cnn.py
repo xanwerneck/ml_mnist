@@ -138,8 +138,12 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
 
     datasets = load_data(dataset)
 
+    #daaset with additional normalized dataset
     train_set_x, train_set_y = datasets[0]
-    #train_set_x_10 = helper.normalize_digit(train_set_x.get_value()[0], 18, 28)
+    
+    #normalize digit width
+    train_set_x_norm, train_set_y_norm = helper.additional_database(train_set_x,train_set_y)    
+    
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
 
@@ -150,6 +154,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
     n_train_batches /= batch_size
     n_valid_batches /= batch_size
     n_test_batches /= batch_size
+
 
     # allocate symbolic variables for the data
     index = T.lscalar()  # index to a [mini]batch
