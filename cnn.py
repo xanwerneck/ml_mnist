@@ -142,7 +142,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
     train_set_x, train_set_y = datasets[0]
     
     #normalize digit width
-    train_set_x_norm, train_set_y_norm = helper.additional_database(train_set_x,train_set_y)    
+    #train_set_x_norm, train_set_y_norm = helper.additional_database(train_set_x,train_set_y)    
     
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
@@ -212,7 +212,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
         n_out=500,
         activation=T.tanh
     )
-
+    
     # classify the values of the fully-connected sigmoidal layer
     layer3 = LogisticRegression(input=layer2.output, n_in=500, n_out=10)
 
