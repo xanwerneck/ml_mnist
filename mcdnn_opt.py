@@ -92,11 +92,11 @@ class PBlockNN(object):
             nkerns=nkerns
         )
 
-        self.params = dnn0.params + dnn1.params
+        self.params     = dnn0.params + dnn1.params
 
-        self.cost   = dnn0.cost + dnn1.cost
+        self.cost       = dnn0.cost + dnn1.cost
 
-        self.y_pred_dnn = dnn0.y_pred + dnn1.y_pred
+        self.y_pred_dnn = [dnn0.y_pred,dnn1.y_pred]
 
 
 class MCDNNetwork(object):
@@ -120,18 +120,20 @@ class MCDNNetwork(object):
         self.y_pred_block = block0.y_pred_dnn
 
     def errors(self, y):
-        if y.ndim != self.y_pred_block.ndim:
+        if y.ndim != self.y_pred_block[0].ndim:
             raise TypeError(
                 'y should have the same shape as self.y_pred',
                 ('y', y.type, 'y_pred', self.y_pred_block.type)
             )
         if y.dtype.startswith('int'):
-            return T.mean(T.neq(self.y_pred_block, y))
+            cont = 0
+            num_ret = 0
+            for x in self.y_pred_block:
+                cont   += 1
+                num_ret = T.mean(T.neq(x, y))
+            return num_ret / cont
         else:
             raise NotImplementedError()
-
-    def negative_log_likelihood(self,y):
-        return -T.mean(T.log(self.pred)[T.arange(y.shape[0]), y])
 
 
 def mcddn(init_learning_rate=0.001, n_epochs=800,
@@ -153,15 +155,23 @@ def mcddn(init_learning_rate=0.001, n_epochs=800,
 
     # compute number of minibatches for training, validation and testing
     n_train_batches  = train_set_x.get_value(borrow=True).shape[0]
+    n_norm_batches   = train_set_x.get_value(borrow=True).shape[0] / 50000
+    n_train_batches  = n_train_batches / n_norm_batches
+
     n_valid_batches  = valid_set_x.get_value(borrow=True).shape[0]
     n_test_batches   = test_set_x.get_value(borrow=True).shape[0]
+    
     n_train_batches /= batch_size
     n_valid_batches /= batch_size
     n_test_batches  /= batch_size
 
+    print xrange(n_train_batches)
+    print xrange(n_norm_batches)
+
     # allocate symbolic variables for the data
     index = T.lscalar()  # index to a [mini]batch
     learning_rate = T.fscalar()
+    i_norm = T.lscalar()
 
     # start-snippet-1
     x = T.matrix('x')   # the data is presented as rasterized images
@@ -210,12 +220,12 @@ def mcddn(init_learning_rate=0.001, n_epochs=800,
     ]
 
     train_model = theano.function(
-        [index, learning_rate],
+        [index, learning_rate, i_norm],
         cost,
         updates=updates,
         givens={
-            x: train_set_x[index * batch_size: (index + 1) * batch_size],
-            y: train_set_y[index * batch_size: (index + 1) * batch_size]
+            x: train_set_x[(index * batch_size) + (i_norm * 50000): ((index+1) * batch_size) + (i_norm * 50000)],
+            y: train_set_y[(index * batch_size) + (i_norm * 50000): ((index+1) * batch_size) + (i_norm * 50000)]
         }
     )
 
@@ -242,17 +252,19 @@ def mcddn(init_learning_rate=0.001, n_epochs=800,
 
     epoch = 0
     done_looping = False
-
+    print n_train_batches
     while (epoch < n_epochs) and (not done_looping):
         current_learning_rate = max(numpy.array([init_learning_rate * 0.993**epoch, 0.00003], dtype=numpy.float32))
         epoch = epoch + 1
+
         for minibatch_index in xrange(n_train_batches):
 
             iter = (epoch - 1) * n_train_batches + minibatch_index
 
             if iter % 100 == 0:
                 print 'training @ iter = ', iter
-            cost_ij = train_model(minibatch_index, current_learning_rate)
+            for ind_norm in xrange(n_norm_batches):
+                cost_ij = train_model(minibatch_index, current_learning_rate, ind_norm)
 
             if (iter + 1) % validation_frequency == 0:
 
@@ -301,4 +313,4 @@ def mcddn(init_learning_rate=0.001, n_epochs=800,
                           ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
 if __name__ == '__main__':
-    mcddn(init_learning_rate=0.001, n_epochs=1)
+    mcddn(init_learning_rate=0.001, n_epochs=100)

@@ -45,6 +45,8 @@ import numpy
 import theano
 import theano.tensor as T
 
+import helper as helper
+
 
 class LogisticRegression(object):
     """Multi-class Logistic Regression Class
@@ -214,6 +216,24 @@ def load_data(dataset):
     #the number of rows in the input. It should give the target
     #target to the example with the same index in the input.
 
+    def shared_dataset_train(data_xy, borrow=True):
+        
+        data_x, data_y = data_xy  
+        
+        train_set_x_norm, train_set_y_norm = helper.additional_database(data_x,data_y)    
+        
+        train_set_x_sh = numpy.concatenate(train_set_x_norm,axis=0)
+        train_set_y_sh = numpy.concatenate(train_set_y_norm,axis=0)
+        
+        shared_x = theano.shared(numpy.asarray(train_set_x_sh,
+                                               dtype=theano.config.floatX),
+                                 borrow=borrow)
+        shared_y = theano.shared(numpy.asarray(train_set_y_sh,
+                                               dtype=theano.config.floatX),
+                                 borrow=borrow)
+
+        return shared_x, T.cast(shared_y, 'int32')
+
     def shared_dataset(data_xy, borrow=True):
         """ Function that loads the dataset into shared variables
 
@@ -223,7 +243,7 @@ def load_data(dataset):
         is needed (the default behaviour if the data is not in a shared
         variable) would lead to a large decrease in performance.
         """
-        data_x, data_y = data_xy
+        data_x, data_y = data_xy  
         shared_x = theano.shared(numpy.asarray(data_x,
                                                dtype=theano.config.floatX),
                                  borrow=borrow)
@@ -241,7 +261,7 @@ def load_data(dataset):
 
     test_set_x, test_set_y = shared_dataset(test_set)
     valid_set_x, valid_set_y = shared_dataset(valid_set)
-    train_set_x, train_set_y = shared_dataset(train_set)
+    train_set_x, train_set_y = shared_dataset_train(train_set)
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]

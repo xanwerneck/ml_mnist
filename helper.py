@@ -16,11 +16,10 @@ def additional_database(train_set_x,train_set_y):
     train_set_x_gen = [train_set_x]
     train_set_y_gen = [train_set_y]
     for i in [18]:
-        train_set_x_norm = normalize_dataset(train_set_x.get_value(), i, 28)
-        shared_x_norm    = theano.shared(numpy.asarray(train_set_x_norm,
-                                                   dtype=theano.config.floatX),
-                                     borrow=True)
-        train_set_x_gen.append(shared_x_norm)
+        train_set_x_norm = normalize_dataset(train_set_x, i, 28)
+        train_x_ar       = numpy.asarray(train_set_x_norm,
+                                         dtype=theano.config.floatX)
+        train_set_x_gen.append(train_x_ar)
         train_set_y_gen.append(train_set_y)
         print '... normalized W' + str(i)
     return train_set_x_gen, train_set_y_gen
