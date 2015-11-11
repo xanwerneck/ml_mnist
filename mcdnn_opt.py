@@ -15,13 +15,6 @@ from mlp import HiddenLayer
 from cnn import LeNetConvPoolLayer
 import helper as helper
 
-def inspect_inputs(i, node, fn):
-    print i, node, "input(s) value(s):", [input[0] for input in fn.inputs]
-
-def inspect_outputs(i, node, fn):
-    print "output(s) value(s):", [output[0] for output in fn.outputs]
-
-
 class DeepConvolutionalNeuralNetwork(object):
 
     def __init__(self,batch_size=500,x=None,y=None,nkerns=[20,40]):
@@ -76,7 +69,6 @@ class PBlockNN(object):
 
         print '... building the model block'
 
-        # normalization = w10
         dnn0 = DeepConvolutionalNeuralNetwork(
             batch_size=batch_size,
             x=x,
@@ -84,7 +76,6 @@ class PBlockNN(object):
             nkerns=nkerns
         )
 
-        # normalization = w12
         dnn1 = DeepConvolutionalNeuralNetwork(
             batch_size=batch_size,
             x=x,
@@ -92,11 +83,19 @@ class PBlockNN(object):
             nkerns=nkerns
         )
 
-        self.params     = dnn0.params + dnn1.params
+        dnn2 = DeepConvolutionalNeuralNetwork(
+            batch_size=batch_size,
+            x=x,
+            y=y,
+            nkerns=nkerns
+        )
 
-        self.cost       = dnn0.cost + dnn1.cost
 
-        self.y_pred_dnn = [dnn0.y_pred,dnn1.y_pred]
+        self.params     = dnn0.params + dnn1.params + dnn2.params 
+
+        self.cost       = dnn0.cost + dnn1.cost + dnn2.cost 
+
+        self.y_pred_dnn = [dnn0.y_pred,dnn1.y_pred,dnn2.y_pred]
 
 
 class MCDNNetwork(object):
