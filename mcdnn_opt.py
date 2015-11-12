@@ -90,12 +90,40 @@ class PBlockNN(object):
             nkerns=nkerns
         )
 
+        dnn3 = DeepConvolutionalNeuralNetwork(
+            batch_size=batch_size,
+            x=x,
+            y=y,
+            nkerns=nkerns
+        )
 
-        self.params     = dnn0.params + dnn1.params + dnn2.params 
+        dnn4 = DeepConvolutionalNeuralNetwork(
+            batch_size=batch_size,
+            x=x,
+            y=y,
+            nkerns=nkerns
+        )
 
-        self.cost       = dnn0.cost + dnn1.cost + dnn2.cost 
+        dnn5 = DeepConvolutionalNeuralNetwork(
+            batch_size=batch_size,
+            x=x,
+            y=y,
+            nkerns=nkerns
+        )
 
-        self.y_pred_dnn = [dnn0.y_pred,dnn1.y_pred,dnn2.y_pred]
+        dnn6 = DeepConvolutionalNeuralNetwork(
+            batch_size=batch_size,
+            x=x,
+            y=y,
+            nkerns=nkerns
+        )
+
+
+        self.params     = dnn0.params + dnn1.params + dnn2.params + dnn3.params + dnn4.params + dnn5.params + dnn6.params 
+
+        self.cost       = dnn0.cost + dnn1.cost + dnn2.cost + dnn3.cost + dnn4.cost + dnn5.cost + dnn6.cost 
+
+        self.y_pred_dnn = [dnn0.y_pred,dnn1.y_pred,dnn2.y_pred,dnn3.y_pred,dnn4.y_pred,dnn5.y_pred,dnn6.y_pred]
 
 
 class MCDNNetwork(object):

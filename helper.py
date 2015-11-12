@@ -1,5 +1,5 @@
 import numpy
-import Image
+from PIL import Image
 from scipy import misc
 from generate_file import generate_images
 import theano
@@ -15,7 +15,7 @@ def additional_database(train_set_x,train_set_y):
     print '... normalizing width digits'
     train_set_x_gen = [train_set_x]
     train_set_y_gen = [train_set_y]
-    for i in [18]:
+    for i in [10,12,14,16,18,20]:
         train_set_x_norm = normalize_dataset(train_set_x, i, 28)
         train_x_ar       = numpy.asarray(train_set_x_norm,
                                          dtype=theano.config.floatX)
