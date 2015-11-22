@@ -268,4 +268,4 @@ def train_mcdnn_column(normalized_width=0, n_epochs=800, trail=0):
 if __name__ == '__main__':
     for nm in [0,10,12,14,16,18,20]:
         for trail in [0,1,2,3,4]:
-            train_mcdnn_column(nm, n_epochs=1, trail=trail)
+            train_mcdnn_column(nm, n_epochs=800, trail=trail)

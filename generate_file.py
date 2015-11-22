@@ -1,6 +1,6 @@
 import struct
 from array import array
-import Image
+from PIL import Image
 import math
 
 
