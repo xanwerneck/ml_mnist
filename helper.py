@@ -15,13 +15,6 @@ def additional_database(train_set_x,train_set_y):
     print '... normalizing width digits'
     train_set_x_gen = [train_set_x]
     train_set_y_gen = [train_set_y]
-    for i in [10,12,14,16,18,20]:
-        train_set_x_norm = normalize_dataset(train_set_x, i, 28)
-        train_x_ar       = numpy.asarray(train_set_x_norm,
-                                         dtype=theano.config.floatX)
-        train_set_x_gen.append(train_x_ar)
-        train_set_y_gen.append(train_set_y)
-        print '... normalized W' + str(i)
     return train_set_x_gen, train_set_y_gen
     
 

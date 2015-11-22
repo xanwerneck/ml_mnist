@@ -40,7 +40,7 @@ import helper as helper
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2)):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), W=None, b=None):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -63,6 +63,7 @@ class LeNetConvPoolLayer(object):
         """
 
         assert image_shape[1] == filter_shape[1]
+
         self.input = input
 
         # there are "num input feature maps * filter height * filter width"
@@ -73,19 +74,25 @@ class LeNetConvPoolLayer(object):
         #   pooling size
         fan_out = (filter_shape[0] * numpy.prod(filter_shape[2:]) /
                    numpy.prod(poolsize))
-        # initialize weights with random weights
-        W_bound = numpy.sqrt(6. / (fan_in + fan_out))
-        self.W = theano.shared(
-            numpy.asarray(
+
+        if W is None:
+            # initialize weights with random weights
+            W_bound = numpy.sqrt(6. / (fan_in + fan_out))
+            W_values = numpy.asarray(
                 rng.uniform(low=-W_bound, high=W_bound, size=filter_shape),
                 dtype=theano.config.floatX
-            ),
-            borrow=True
-        )
+            )
+        else:
+            W_values = W
 
-        # the bias is a 1D tensor -- one bias per output feature map
-        b_values = numpy.zeros((filter_shape[0],), dtype=theano.config.floatX)
-        self.b = theano.shared(value=b_values, borrow=True)
+        if b is None:
+            # the bias is a 1D tensor -- one bias per output feature map
+            b_values = numpy.zeros((filter_shape[0],), dtype=theano.config.floatX)
+        else:
+            b_values = b
+
+        self.W = theano.shared(value=W_values, name='W', borrow=True)
+        self.b = theano.shared(value=b_values, name='b', borrow=True)
 
         # convolve input feature maps with filters
         conv_out = conv.conv2d(
@@ -96,11 +103,14 @@ class LeNetConvPoolLayer(object):
         )
 
         # downsample each feature map individually, using maxpooling
-        pooled_out = downsample.max_pool_2d(
-            input=conv_out,
-            ds=poolsize,
-            ignore_border=True
-        )
+        if (poolsize[0] == 1 and poolsize[1] == 1):
+            pooled_out = conv_out
+        else:
+            pooled_out = downsample.max_pool_2d(
+                input=conv_out,
+                ds=poolsize,
+                ignore_border=True
+            )
 
         # add the bias term. Since the bias is a vector (1D array), we first
         # reshape it to a tensor of shape (1, n_filters, 1, 1). Each bias will
@@ -110,9 +120,6 @@ class LeNetConvPoolLayer(object):
 
         # store parameters of this layer
         self.params = [self.W, self.b]
-
-        # keep track of model input
-        self.input = input
 
 
 def evaluate_lenet5(learning_rate=0.1, n_epochs=200,

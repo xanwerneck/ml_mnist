@@ -15,6 +15,12 @@ from mlp import HiddenLayer
 from cnn import LeNetConvPoolLayer
 import helper as helper
 
+class DNNColumns(object):
+    def __init__(self, arg):
+        super(DNNColumns, self).__init__()
+        self.arg = arg
+
+
 class DeepConvolutionalNeuralNetwork(object):
 
     def __init__(self,batch_size=500,x=None,y=None,nkerns=[20,40]):
@@ -118,12 +124,14 @@ class PBlockNN(object):
             nkerns=nkerns
         )
 
+        print dnn0.y_pred
 
-        self.params     = dnn0.params + dnn1.params + dnn2.params + dnn3.params + dnn4.params + dnn5.params + dnn6.params 
 
-        self.cost       = dnn0.cost + dnn1.cost + dnn2.cost + dnn3.cost + dnn4.cost + dnn5.cost + dnn6.cost 
+        self.params     = dnn0.params
 
-        self.y_pred_dnn = [dnn0.y_pred,dnn1.y_pred,dnn2.y_pred,dnn3.y_pred,dnn4.y_pred,dnn5.y_pred,dnn6.y_pred]
+        self.cost       = dnn0.cost
+
+        self.y_pred_dnn = [dnn0.y_pred]
 
 
 class MCDNNetwork(object):
