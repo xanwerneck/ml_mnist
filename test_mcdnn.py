@@ -16,16 +16,11 @@ def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
     all_datasets = {}
     # instantiate multiple columns
     columns = []
-    #nm_wid
-    norm = [0,10,12,14,16,18,20]
-    cont_nm = 0
     for model in models:
         # load model params
-        normalized_width = norm[cont_nm / 5]
-        norm = norm + 1
         f = open('./models/'+model)
         params = cPickle.load(f)
-        nkerns, batch_size, nm_width, distortion = cPickle.load(f)
+        nkerns, batch_size, normalized_width, distortion = cPickle.load(f)
         if all_datasets.get(normalized_width):
             datasets = all_datasets[normalized_width]
         else:

@@ -20,7 +20,7 @@ import helper as helper
 
 class DNNColumn(object):
 
-    def __init__(self, ds=None, nkerns=[32, 48], batch_size=100, normalized_width=20, distortion=0,
+    def __init__(self, ds=None, nkerns=[32, 48], batch_size=100, normalized_width=0, distortion=0,
                     params=[None, None,None, None,None, None,None, None]):
 
         #layers
@@ -262,7 +262,7 @@ def train_mcdnn_column(normalized_width=0, n_epochs=800, trail=0):
     datasets = load_data(dataset='mnist.pkl.gz', digit_normalized_width=normalized_width, digit_out_image_size=29)
     column = DNNColumn(ds=datasets, normalized_width=normalized_width)
     column.train_column(n_epochs=n_epochs, init_learning_rate=0.001)
-    filename = 'mcdnn_nw%i_d%i_trail%i_%iLayers_time_%i' % (normalized_width, distortion, trail, len(self.params) / 2, int(time.time()))
+    filename = 'mcdnn_nm%i_trail%i_Layers_time_%i' % (normalized_width, trail, int(time.time()))
     column.save(filename)
 
 if __name__ == '__main__':
