@@ -260,7 +260,7 @@ def train_mcdnn_column(normalized_width=0, n_epochs=800, trail=0):
     print '... train %i column of normalization %i' % (trail, normalized_width)
     print '... num_epochs %i' % (n_epochs)
     datasets = load_data(dataset='mnist.pkl.gz', digit_normalized_width=normalized_width, digit_out_image_size=29)
-    column = DNNColumn(ds=datasets)
+    column = DNNColumn(ds=datasets, normalized_width=normalized_width)
     column.train_column(n_epochs=n_epochs, init_learning_rate=0.001)
     filename = 'mcdnn_nw%i_d%i_trail%i_%iLayers_time_%i' % (normalized_width, distortion, trail, len(self.params) / 2, int(time.time()))
     column.save(filename)
