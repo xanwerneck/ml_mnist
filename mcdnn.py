@@ -146,6 +146,15 @@ class DNNColumn(object):
             }
         )
 
+        # compute probabilities of all output classes - on validation set
+        self.valid_output_batch = theano.function(
+            [index],
+            layer3.p_y_given_x,
+            givens={
+                x: valid_set_x[index * batch_size: (index + 1) * batch_size]
+            }
+        )
+
         # compute probabilities of all output classes
         self.test_output_batch = theano.function(
             [index],
@@ -189,6 +198,13 @@ class DNNColumn(object):
             }
         )
     
+    def valid_outputs(self):
+        test_losses = [
+            self.valid_output_batch(i)
+            for i in xrange(self.n_valid_batches)
+        ]
+        return numpy.concatenate(test_losses)
+
     def test_outputs(self):
         test_losses = [
             self.test_output_batch(i)

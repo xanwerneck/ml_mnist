@@ -10,7 +10,7 @@ from mcdnn import DNNColumn
 
 import pdb
 
-def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
+def test_columns(exclude_mode, models, dataset='mnist.pkl.gz', valid_test='V'):
     print '... Starting to test %i columns' % len(models)
     # create data hash that will be filled with data from different normalizations
     all_datasets = {}
@@ -30,7 +30,10 @@ def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
         columns.append(DNNColumn(datasets, nkerns, batch_size, normalized_width, 0, params))
     print '... Forward propagating %i columns' % len(models)
     # call test on all of them recieving 10 outputs
-    model_outputs = [column.test_outputs() for column in columns]
+    if valid_test=='V':
+        model_outputs = [column.valid_outputs() for column in columns]  
+    else:
+        model_outputs = [column.test_outputs() for column in columns]      
     # average 10 outputs
     avg_output = numpy.mean(model_outputs, axis=0)
     # argmax over them
@@ -50,6 +53,11 @@ def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
 
     error = theano.function([pred], T.mean(T.neq(pred, true_labels)))
     acc = error(predictions.astype(dtype=numpy.int32))
+    if valid_test=='V':
+        print 'Results on validation set'
+    else:
+        print 'Results on test set'
+    print '....'
     print 'Error across %i columns: %f %%' % (len(models), 100*acc)
     return [predictions, acc]
 
@@ -57,5 +65,12 @@ if __name__ == '__main__':
     # how to test
     # ex.: python test_mcdnn.py 0 DNN_4Layers_t1448204295.pkl
     assert len(sys.argv) > 2
-    models = sys.argv[2:]
-    test_columns(int(sys.argv[1]), models)
+    valid_test = sys.argv[2]
+    if valid_test == 'V':
+        print '... executing validation on models'
+        models = sys.argv[3:]
+        test_columns(int(sys.argv[1]), models, 'V')
+    else:
+        print '... executing test on models'
+        models = sys.argv[3:]
+        test_columns(int(sys.argv[1]), models, 'V')
