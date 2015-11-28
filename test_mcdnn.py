@@ -32,32 +32,31 @@ def test_columns(exclude_mode, models, valid_test='V'):
     print '... Forward propagating %i columns' % len(models)
     # call test on all of them recieving 10 outputs
     if valid_test=='V':
-        model_outputs = [column.valid_outputs() for column in columns]  
+        model_outputs = [column.valid_outputs() for column in columns] 
+        position_ds   = 1 
     else:
         model_outputs = [column.test_outputs() for column in columns]      
+        position_ds   = 2
     # average 10 outputs
     avg_output = numpy.mean(model_outputs, axis=0)
     # argmax over them
     predictions = numpy.argmax(avg_output, axis=1)
     # compare predictions with true labels
     pred = T.ivector('pred')
-    all_true_labels_length = theano.function([], all_datasets.values()[0][2][1].shape)
+
+    all_true_labels_length = theano.function([], all_datasets.values()[0][position_ds][1].shape)
     remainder = all_true_labels_length() - len(predictions)
     if exclude_mode and remainder:
         print '... Excluding FIRST %i points' % remainder
-        true_labels = all_datasets.values()[0][2][1][remainder:]
+        true_labels = all_datasets.values()[0][position_ds][1][remainder:]
     elif remainder: # TODO: remove this, doesn't seem to make sense since the predictions would be misaligned
         print '... Excluding LAST %i points' % remainder
-        true_labels = all_datasets.values()[0][2][1][:len(predictions)]
+        true_labels = all_datasets.values()[0][position_ds][1][:len(predictions)]
     else:
-        true_labels = all_datasets.values()[0][2][1][:]
+        true_labels = all_datasets.values()[0][position_ds][1][:]
 
     error = theano.function([pred], T.mean(T.neq(pred, true_labels)))
     acc = error(predictions.astype(dtype=numpy.int32))
-    if valid_test=='V':
-        print 'Results on validation set'
-    else:
-        print 'Results on test set'
     print '....'
     print 'Error across %i columns: %f %%' % (len(models), 100*acc)
     return [predictions, acc]
@@ -74,4 +73,4 @@ if __name__ == '__main__':
     else:
         print '... executing test on models'
         models = sys.argv[3:]
-        test_columns(int(sys.argv[1]), models, 'V')
+        test_columns(int(sys.argv[1]), models, 'T')
