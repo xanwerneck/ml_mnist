@@ -316,7 +316,15 @@ def train_mcdnn_column(normalized_width=0, n_epochs=800, trail=0):
     column.save(filename)
 
 if __name__ == '__main__':
-    # execute 35 columns of train
-    for nm in [0,10,12,14,16,18,20]:
-        for trail in [0,1,2,3,4]:
-            train_mcdnn_column(nm, n_epochs=800, trail=trail)
+    # execute train columns by params
+    assert len(sys.argv) > 1
+    if sys.argv[1] == '0':
+        print '... you choose train all columns'
+        for nm in [0,10,12,14,16,18,20]:
+            for trail in [0,1,2,3,4]:
+                train_mcdnn_column(nm, n_epochs=800, trail=trail)
+    else:
+        print '... train specific ccolumns'
+        for nm in sys.argv[3:]:
+            for x in xrange(0,int(sys.argv[2])):
+                train_mcdnn_column(int(nm), n_epochs=800, trail=x)
