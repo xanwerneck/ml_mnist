@@ -243,7 +243,6 @@ def load_data(dataset, digit_normalized_width=0, digit_out_image_size=SS,
             # Check if dataset is in the data directory.
             new_path = os.path.join(
                 os.path.split(__file__)[0],
-                "..",
                 "data",
                 dataset
             )
