@@ -10,7 +10,8 @@ from mcdnn import DNNColumn
 
 import pdb
 
-def test_columns(exclude_mode, models, dataset='mnist.pkl.gz', valid_test='V'):
+def test_columns(exclude_mode, models, valid_test='V'):
+    dataset='mnist.pkl.gz'
     print '... Starting to test %i columns' % len(models)
     # create data hash that will be filled with data from different normalizations
     all_datasets = {}
