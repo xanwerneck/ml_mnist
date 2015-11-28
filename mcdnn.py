@@ -1,4 +1,27 @@
+# -*- coding: utf-8 -*-
+"""
+This mcdnn.py create a column model of train on trainset from MNIST
 
+MCDNN - Multi-column Deep Neural Networks
+
+MCDNN is actually state-of-art on MNIST dataset with an 0,23 error rate. The principle
+of this algorithm is create a committee of 35 columns pre-trained with this algorithm. On each
+column we change some aspects of train_set. 
+
+Our 35 columns divided by:
+    5 Train per each normalization
+    7 normalization width: [0,10,12,14,16,18,20]
+        0 correspond a dataset without normalization
+
+References:
+
+    - mcdnn: "Multi-column Deep Neural Networks" -
+                Dan Cires¸an, Ueli Meier and Jurgen Schmidhuber, 
+                Link: http://people.idsia.ch/~ciresan/data/cvpr2012.pdf
+    - algorithm base: We use load data and test algorith from ciresan git repo
+                Link: https://github.com/ilyakava/ciresan
+
+"""
 import os
 import sys
 import timeit
@@ -15,6 +38,8 @@ from theano.tensor.nnet import conv
 from logistic_sgd import LogisticRegression, load_data
 from mlp import HiddenLayer
 from cnn import LeNetConvPoolLayer
+
+# a different way of normalization width
 import helper as helper
 
 
@@ -23,11 +48,17 @@ class DNNColumn(object):
     def __init__(self, ds=None, nkerns=[32, 48], batch_size=100, normalized_width=0, distortion=0,
                     params=[None, None,None, None,None, None,None, None]):
 
-        #layers
+        #layers for train:
+        #layer3_W, layer3_b on L1-Convolutional Layer with  20 by 26x26
+        #layer2_W, layer2_b on L2-Convolutional Layer with 40 by 9x9
+        #layer1_W, layer1_b on HiddenLayer - fully-connected
+        #layer0_W, layer0_b on LogisticRegression - output layer
+
         layer3_W, layer3_b, layer2_W, layer2_b, layer1_W, layer1_b, layer0_W, layer0_b = params        
+        
         rng = numpy.random.RandomState(23455)
 
-        #dataset for train
+        #dataset by param - the load data was executed before on function call
         train_set_x, train_set_y = ds[0]
         valid_set_x, valid_set_y = ds[1]
         test_set_x, test_set_y   = ds[2]
@@ -93,6 +124,8 @@ class DNNColumn(object):
             activation=T.tanh
         )
         
+        # contruct the output layer
+        # classification of values from fully-connected sigmoidal layer
         layer3 = LogisticRegression(
             input=layer2.output, 
             n_in=150, 
@@ -103,7 +136,7 @@ class DNNColumn(object):
 
         cost = layer3.negative_log_likelihood(y)
 
-        # create a function to compute the mistakes that are made by the model
+        # compute the mistakes that are made by the model
         self.test_model = theano.function(
             [index],
             layer3.errors(y),
@@ -113,7 +146,7 @@ class DNNColumn(object):
             }
         )
 
-        # create a function to compute probabilities of all output classes
+        # compute probabilities of all output classes
         self.test_output_batch = theano.function(
             [index],
             layer3.p_y_given_x,
@@ -122,6 +155,7 @@ class DNNColumn(object):
             }
         )
 
+        # compute the mistakes on validate set that are made by model
         self.validate_model = theano.function(
             [index],
             layer3.errors(y),
@@ -132,6 +166,9 @@ class DNNColumn(object):
         )
 
         self.params = layer3.params + layer2.params + layer1.params + layer0.params
+
+        # save the params to use for reference on test set
+        # those will be use on test_mcdnn
         self.column_params = [nkerns, batch_size, normalized_width, distortion]
 
         grads  = T.grad(cost, self.params)
@@ -141,6 +178,7 @@ class DNNColumn(object):
             for param_i, grad_i in zip(self.params, grads)
         ]
 
+        # train the model
         self.train_model = theano.function(
             [index, learning_rate],
             cost,
@@ -219,15 +257,17 @@ class DNNColumn(object):
                         best_iter = iter
 
                         # test it on the test set
-                        test_losses = [
-                            self.test_model(i)
-                            for i in xrange(self.n_test_batches)
-                        ]
-                        test_score = numpy.mean(test_losses)
-                        print(('     epoch %i, minibatch %i/%i, test error of '
-                               'best model %f %%') %
-                              (epoch, minibatch_index + 1, self.n_train_batches,
-                               test_score * 100.))
+                        # I leave code below commented because I want just train
+                        # if anyone want to use just one column, can execute code below
+                        #test_losses = [
+                        #    self.test_model(i)
+                        #    for i in xrange(self.n_test_batches)
+                        #]
+                        #test_score = numpy.mean(test_losses)
+                        #print(('     epoch %i, minibatch %i/%i, test error of '
+                        #       'best model %f %%') %
+                        #      (epoch, minibatch_index + 1, self.n_train_batches,
+                        #       test_score * 100.))
 
                 if patience <= iter:
                     done_looping = True
@@ -246,9 +286,10 @@ class DNNColumn(object):
         """
         Will need to load last layer W,b to first layer W,b
         """
-        name = filename or 'CNN_%iLayers_t%i' % (len(self.params) / 2, int(time.time()))
+        name = filename or 'DNN_%iLayers_t%i' % (len(self.params) / 2, int(time.time()))
 
         print('Saving Model as "%s"...' % name)
+        
         f = open('./models/'+name+'.pkl', 'wb')
 
         cPickle.dump([param.get_value(borrow=True) for param in self.params], f, -1)
@@ -259,13 +300,23 @@ class DNNColumn(object):
 def train_mcdnn_column(normalized_width=0, n_epochs=800, trail=0):
     print '... train %i column of normalization %i' % (trail, normalized_width)
     print '... num_epochs %i' % (n_epochs)
+    
+    # load data using logistic_sgd width size normalization param
+    # if normalized_width == 0 then the data_set comes without changes on width digit
+    # this method load_data reshape all images from 28x28 to 29x29 with padding method
+    # is important to use dataset on dnncolumn class
     datasets = load_data(dataset='mnist.pkl.gz', digit_normalized_width=normalized_width, digit_out_image_size=29)
+    
+    # initialize dnn column  with  dataset above
     column = DNNColumn(ds=datasets, normalized_width=normalized_width)
     column.train_column(n_epochs=n_epochs, init_learning_rate=0.1)
+    
+    #save the model with params from train
     filename = 'mcdnn_nm%i_trail%i_Layers_time_%i' % (normalized_width, trail, int(time.time()))
     column.save(filename)
 
 if __name__ == '__main__':
+    # execute 35 columns of train
     for nm in [0,10,12,14,16,18,20]:
         for trail in [0,1,2,3,4]:
             train_mcdnn_column(nm, n_epochs=800, trail=trail)
