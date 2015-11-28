@@ -5,8 +5,8 @@ import numpy
 import theano
 import theano.tensor as T
 
-from log_sgd import load_data
-from mcdnn_opt_rev import DNNColumn
+from logistic_sgd import load_data
+from mcdnn import DNNColumn
 
 import pdb
 
@@ -54,8 +54,8 @@ def test_columns(exclude_mode, models, dataset='mnist.pkl.gz'):
     return [predictions, acc]
 
 if __name__ == '__main__':
-    # how to call
-    # python test_mcdnn.py 0 CNN_4Layers_t1448204295.pkl
+    # how to test
+    # ex.: python test_mcdnn.py 0 DNN_4Layers_t1448204295.pkl
     assert len(sys.argv) > 2
     models = sys.argv[2:]
     test_columns(int(sys.argv[1]), models)

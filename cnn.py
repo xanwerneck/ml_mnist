@@ -121,6 +121,9 @@ class LeNetConvPoolLayer(object):
         # store parameters of this layer
         self.params = [self.W, self.b]
 
+        # keep track of model input
+        self.input = input
+
 
 def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
                     dataset='mnist.pkl.gz',
@@ -145,12 +148,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
 
     datasets = load_data(dataset)
 
-    #daaset with additional normalized dataset
     train_set_x, train_set_y = datasets[0]
-    
-    #normalize digit width
-    #train_set_x_norm, train_set_y_norm = helper.additional_database(train_set_x,train_set_y)    
-    
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
 
